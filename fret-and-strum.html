@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fret &amp; Strum — a luthier's lab</title>
+<style>
+  :root{
+    --bg:#1a120b; --bg-2:#231711; --panel:#2c1d12; --panel-2:#3a2818;
+    --wood:#6b4423; --wood-lt:#8b5a2b; --wood-dk:#3d2817;
+    --cream:#f4e8d0; --cream-dim:#cbb896; --cream-fade:#9c8a70;
+    --amber:#d4a04a; --rust:#b85c3a; --sage:#8ba888;
+    --line:rgba(244,232,208,.08); --line-2:rgba(244,232,208,.14);
+    --shadow:0 12px 30px rgba(0,0,0,.45);
+    --serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 20% -10%, #2a1b10 0%, transparent 60%),
+      radial-gradient(800px 500px at 90% 10%, #2a1a0b 0%, transparent 60%),
+      var(--bg);
+    color:var(--cream); font-family:var(--serif); line-height:1.55;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 100px}
+  header.top{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    flex-wrap:wrap;gap:18px;padding-bottom:18px;
+    border-bottom:1px solid var(--line);margin-bottom:8px;
+  }
+  .brand{font-size:2.7rem;letter-spacing:.5px;line-height:1.05}
+  .brand .amp{color:var(--amber);font-style:italic;padding:0 4px}
+  .tagline{color:var(--cream-dim);font-style:italic;font-size:1rem;margin-top:6px}
+  .toggle{
+    display:inline-flex;background:var(--panel);border-radius:999px;
+    border:1px solid var(--line-2);padding:4px;
+  }
+  .toggle button{
+    background:transparent;border:0;color:var(--cream-dim);
+    padding:9px 20px;border-radius:999px;cursor:pointer;
+    font-family:inherit;font-size:1rem;letter-spacing:.6px;transition:all .18s ease;
+  }
+  .toggle button.on{background:var(--amber);color:#2a1a07;font-weight:600}
+  .toggle button:hover:not(.on){color:var(--cream)}
+
+  section{margin:40px 0}
+  h2{font-size:1.55rem;color:var(--amber);margin:0 0 4px;letter-spacing:.5px;font-weight:500}
+  h2 .num{color:var(--rust);margin-right:10px;font-style:italic;font-weight:400}
+  .lede{color:var(--cream-dim);margin:0 0 18px;max-width:720px;font-size:1.02rem}
+
+  .sticky-board{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg, var(--bg) 80%, rgba(26,18,11,.92) 100%);
+    padding:10px 0 14px;margin:-10px 0 0;
+  }
+  .board-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .fretboard-card{
+    min-width:680px;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.04) 0 2px, transparent 2px 9px),
+      linear-gradient(180deg, var(--wood-lt) 0%, var(--wood) 60%, var(--wood-dk) 100%);
+    border:1px solid var(--wood-dk);
+    border-radius:10px;padding:12px 14px 18px;box-shadow:var(--shadow);
+  }
+  .fretboard-label{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:.85rem;color:#f3e4c4;letter-spacing:1.5px;text-transform:uppercase;
+    margin-bottom:6px;text-shadow:0 1px 0 rgba(0,0,0,.4);
+  }
+  .fretboard-label .now{color:#fff3d0;font-style:italic;text-transform:none;letter-spacing:.5px;min-height:1.2em}
+  svg.fretboard{display:block;width:100%;height:auto}
+
+  .panel{
+    background:linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+    border:1px solid var(--line-2);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow);
+  }
+
+  .explain-grid{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+  @media (max-width:560px){.explain-grid{grid-template-columns:1fr}}
+  .legend{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center}
+  .legend .key{
+    width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+    background:var(--panel-2);border:1px solid var(--line-2);
+    color:var(--cream);font-weight:600;
+  }
+  .legend .key.open{background:transparent;border:2px solid var(--cream)}
+  .legend .key.mute{background:transparent;border:0;font-size:1.5rem;color:var(--rust)}
+
+  .chord-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .chord-card{
+    background:linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+    border:1px solid var(--line-2);border-radius:10px;
+    padding:12px 10px 14px;text-align:center;cursor:pointer;position:relative;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .chord-card:hover{transform:translateY(-2px);border-color:var(--amber);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+  .chord-card.active{border-color:var(--amber);box-shadow:0 0 0 2px rgba(212,160,74,.3)}
+  .chord-card .name{font-size:1.4rem;letter-spacing:.5px;margin-bottom:4px}
+  .chord-card .quality{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--cream-fade)}
+  .chord-card.major .name{color:var(--amber)}
+  .chord-card.minor .name{color:var(--sage)}
+  .chord-card svg{display:block;margin:8px auto 4px}
+  .difficulty{position:absolute;top:8px;right:10px;font-size:.7rem;color:var(--cream-fade);letter-spacing:1px}
+
+  .pattern-list{display:flex;flex-direction:column;gap:14px}
+  .pattern{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+  .pattern-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .pattern-name{font-size:1.1rem;color:var(--cream)}
+  .pattern-desc{font-size:.9rem;color:var(--cream-fade);font-style:italic}
+  .arrows{display:flex;gap:10px;flex-wrap:wrap}
+  .arrow{
+    width:38px;height:54px;border:1px solid var(--line-2);border-radius:6px;
+    display:grid;place-items:center;font-size:1.4rem;color:var(--cream-dim);
+    background:var(--panel);transition:all .12s ease;font-weight:300;
+  }
+  .arrow.on{background:var(--amber);color:#2a1a07;border-color:var(--amber);box-shadow:0 0 14px rgba(212,160,74,.5)}
+  .arrow.miss{color:var(--cream-fade);opacity:.55}
+  .play-btn{
+    background:var(--rust);color:var(--cream);border:0;border-radius:6px;
+    padding:8px 18px;font-family:inherit;font-size:.95rem;cursor:pointer;letter-spacing:.5px;
+  }
+  .play-btn:hover{background:#cd6e4c}
+  .play-btn.stop{background:var(--wood-dk)}
+  select, input[type=range]{
+    background:var(--panel-2);color:var(--cream);border:1px solid var(--line-2);
+    border-radius:6px;padding:6px 10px;font-family:inherit;font-size:.95rem;
+  }
+  input[type=range]{padding:0;height:24px;accent-color:var(--amber)}
+  label.field{display:flex;align-items:center;gap:8px;color:var(--cream-dim);font-size:.95rem;flex-wrap:wrap}
+
+  .prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .prog{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;cursor:pointer;transition:all .15s ease}
+  .prog:hover{border-color:var(--amber);transform:translateY(-1px)}
+  .prog .roman{font-style:italic;color:var(--cream-fade);font-size:.85rem;letter-spacing:1px}
+  .prog .chords{font-size:1.3rem;color:var(--amber);margin-top:4px;letter-spacing:1px}
+  .prog .chords .sep{color:var(--cream-fade);margin:0 6px;font-size:1rem}
+  .prog.playing{border-color:var(--amber);box-shadow:0 0 0 2px rgba(212,160,74,.25)}
+  .prog .chords span.now{background:rgba(212,160,74,.2);border-radius:4px;padding:0 4px}
+
+  .trainer{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:640px){.trainer{grid-template-columns:1fr}}
+  .trainer-display{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:8px;
+    padding:24px;text-align:center;display:flex;flex-direction:column;
+    justify-content:center;min-height:220px;gap:12px;
+  }
+  .trainer-current{font-size:4rem;color:var(--amber);line-height:1;letter-spacing:1px}
+  .trainer-next{color:var(--cream-dim);font-style:italic;font-size:1.1rem}
+  .trainer-next b{color:var(--sage);font-style:normal;font-weight:500}
+  .beats{display:flex;justify-content:center;gap:10px;margin-top:8px}
+  .beat{
+    width:18px;height:18px;border-radius:50%;background:var(--panel-2);
+    border:1px solid var(--line-2);transition:all .12s ease;
+  }
+  .beat.on{background:var(--amber);box-shadow:0 0 12px rgba(212,160,74,.6)}
+  .beat.downbeat{border-color:var(--rust)}
+  .trainer-controls{display:flex;flex-direction:column;gap:14px;justify-content:center}
+  .selector-pair{display:flex;gap:10px}
+  .selector-pair > div{flex:1}
+  .selector-pair label{display:block;font-size:.8rem;color:var(--cream-fade);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+  .selector-pair select{width:100%}
+  .bpm-row{display:flex;align-items:center;gap:12px}
+  .bpm-row input{flex:1}
+  .bpm-val{font-size:1.4rem;color:var(--amber);font-style:italic;min-width:80px;text-align:right}
+
+  .roadmap{position:relative;padding-left:24px}
+  .roadmap::before{
+    content:'';position:absolute;left:8px;top:6px;bottom:6px;width:2px;
+    background:linear-gradient(180deg, var(--sage), var(--amber), var(--rust));border-radius:1px;
+  }
+  .stage{margin:14px 0;position:relative}
+  .stage::before{
+    content:'';position:absolute;left:-22px;top:7px;width:14px;height:14px;
+    border-radius:50%;background:var(--bg);border:2px solid var(--amber);
+  }
+  .stage.s1::before{border-color:var(--sage)}
+  .stage.s3::before{border-color:var(--rust)}
+  .stage h4{margin:0 0 4px;color:var(--cream);font-size:1.1rem;font-weight:500}
+  .stage h4 .badge{font-size:.7rem;color:var(--cream-fade);letter-spacing:1.5px;text-transform:uppercase;margin-left:8px}
+  .stage p{margin:0;color:var(--cream-dim);font-size:.95rem}
+
+  .tuner-row{display:flex;flex-wrap:wrap;gap:10px}
+  .tuner-btn{
+    background:var(--panel);color:var(--cream);border:1px solid var(--line-2);
+    border-radius:8px;padding:10px 16px;font-family:inherit;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;min-width:72px;
+    transition:all .15s ease;
+  }
+  .tuner-btn:hover{border-color:var(--amber)}
+  .tuner-btn .note{font-size:1.4rem;color:var(--amber)}
+  .tuner-btn .hz{font-size:.7rem;color:var(--cream-fade);letter-spacing:1px;margin-top:2px}
+
+  .barre-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-bottom:14px}
+  .barre-display{display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center}
+  .barre-name{font-size:2rem;color:var(--amber);font-style:italic;letter-spacing:1px}
+
+  .song-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+  .song{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .15s ease}
+  .song:hover{border-color:var(--amber)}
+  .song .title{color:var(--cream);font-size:1.05rem}
+  .song .artist{color:var(--cream-fade);font-size:.85rem;font-style:italic;margin-bottom:4px}
+  .song .chords{color:var(--amber);font-size:1rem;letter-spacing:.5px}
+
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);color:var(--cream-fade);font-style:italic;font-size:.9rem;text-align:center}
+  .hint{font-size:.85rem;color:var(--cream-fade);font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand">Fret <span class="amp">&amp;</span> Strum</div>
+      <div class="tagline">A luthier's workshop for your first hundred days</div>
+    </div>
+    <div class="toggle" id="instToggle" role="tablist">
+      <button data-inst="guitar" class="on">Guitar</button>
+      <button data-inst="ukulele">Ukulele</button>
+    </div>
+  </header>
+  <main id="app"></main>
+  <footer>Built for the beginner who already loves the sound of wood and string.</footer>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const noteName = m => NOTES[((m%12)+12)%12];
+const noteFreq = m => 440 * Math.pow(2,(m-69)/12);
+
+const INSTRUMENTS = {
+  guitar: {
+    name:'Guitar',
+    stringMidi:[40,45,50,55,59,64],
+    stringNames:['E','A','D','G','B','E'],
+    chords:[
+      { name:'Em', q:'minor', d:1, frets:[0,2,2,0,0,0], fingers:[0,2,3,0,0,0] },
+      { name:'Am', q:'minor', d:2, frets:[-1,0,2,2,1,0], fingers:[0,0,2,3,1,0] },
+      { name:'E',  q:'major', d:2, frets:[0,2,2,1,0,0], fingers:[0,2,3,1,0,0] },
+      { name:'A',  q:'major', d:3, frets:[-1,0,2,2,2,0], fingers:[0,0,1,2,3,0] },
+      { name:'Dm', q:'minor', d:3, frets:[-1,-1,0,2,3,1], fingers:[0,0,0,2,3,1] },
+      { name:'D',  q:'major', d:3, frets:[-1,-1,0,2,3,2], fingers:[0,0,0,1,3,2] },
+      { name:'C',  q:'major', d:4, frets:[-1,3,2,0,1,0], fingers:[0,3,2,0,1,0] },
+      { name:'G',  q:'major', d:4, frets:[3,2,0,0,0,3], fingers:[2,1,0,0,0,3] },
+    ],
+    progressions:[
+      { roman:'I – V – vi – IV', chords:['G','D','Em','C'] },
+      { roman:'I – IV – V',      chords:['G','C','D'] },
+      { roman:'vi – IV – I – V', chords:['Em','C','G','D'] },
+      { roman:'I – vi – IV – V', chords:['G','Em','C','D'] },
+    ],
+    songs:[
+      { title:'Knockin\' on Heaven\'s Door', artist:'Bob Dylan',  chords:['G','D','Am','G','D','C'] },
+      { title:'Wonderwall',                   artist:'Oasis',      chords:['Em','G','D','C'] },
+      { title:'Let It Be',                    artist:'The Beatles',chords:['C','G','Am','C'] },
+      { title:'Horse with No Name',           artist:'America',    chords:['Em','D'] },
+      { title:'Sweet Home Alabama',           artist:'Lynyrd Skynyrd', chords:['D','C','G'] },
+    ],
+    barreShapes:[
+      { id:'E',  label:'E-shape major', frets:[0,2,2,1,0,0], fingers:[1,3,4,2,1,1] },
+      { id:'Em', label:'E-shape minor', frets:[0,2,2,0,0,0], fingers:[1,3,4,1,1,1] },
+      { id:'A',  label:'A-shape major', frets:[-1,0,2,2,2,0], fingers:[0,1,3,3,3,1] },
+      { id:'Am', label:'A-shape minor', frets:[-1,0,2,2,1,0], fingers:[0,1,3,4,2,1] },
+    ],
+    rootName: shape => {
+      // root for E-shape on 6th string, A-shape on 5th string
+      return null;
+    }
+  },
+  ukulele: {
+    name:'Ukulele',
+    stringMidi:[67,60,64,69],
+    stringNames:['G','C','E','A'],
+    chords:[
+      { name:'C',  q:'major', d:1, frets:[0,0,0,3], fingers:[0,0,0,3] },
+      { name:'Am', q:'minor', d:1, frets:[2,0,0,0], fingers:[2,0,0,0] },
+      { name:'F',  q:'major', d:2, frets:[2,0,1,0], fingers:[2,0,1,0] },
+      { name:'A',  q:'major', d:2, frets:[2,1,0,0], fingers:[2,1,0,0] },
+      { name:'D',  q:'major', d:3, frets:[2,2,2,0], fingers:[1,2,3,0] },
+      { name:'Dm', q:'minor', d:3, frets:[2,2,1,0], fingers:[2,3,1,0] },
+      { name:'G',  q:'major', d:4, frets:[0,2,3,2], fingers:[0,1,3,2] },
+      { name:'Em', q:'minor', d:4, frets:[0,4,3,2], fingers:[0,4,3,2] },
+    ],
+    progressions:[
+      { roman:'I – V – vi – IV', chords:['C','G','Am','F'] },
+      { roman:'I – IV – V',      chords:['C','F','G'] },
+      { roman:'vi – IV – I – V', chords:['Am','F','C','G'] },
+      { roman:'I – vi – IV – V', chords:['C','Am','F','G'] },
+    ],
+    songs:[
+      { title:'Riptide',         artist:'Vance Joy',  chords:['Am','G','C'] },
+      { title:'I\'m Yours',      artist:'Jason Mraz', chords:['C','G','Am','F'] },
+      { title:'Over the Rainbow',artist:'Iz',         chords:['C','Em','F','G','Am'] },
+      { title:'Stand By Me',     artist:'Ben E. King',chords:['C','Am','F','G'] },
+    ],
+    barreShapes:[
+      { id:'A',  label:'A-shape major', frets:[2,1,0,0], fingers:[2,1,1,1] },
+      { id:'Am', label:'A-shape minor', frets:[2,0,0,0], fingers:[2,1,1,1] },
+    ],
+  },
+};
+
+const PATTERNS = [
+  { name:'Down only',  desc:'Four quarter-note down-strums. The first thing.',
+    steps:[{d:'D',t:1},{d:'D',t:1},{d:'D',t:1},{d:'D',t:1}] },
+  { name:'D D U U D U', desc:'The everyday strum. Eighth-notes with one skipped up.',
+    steps:[{d:'D',t:.5},{d:'D',t:.5},{d:'U',t:.5},{d:'U',t:.5},{d:'D',t:.5},{d:'U',t:.5},{d:'-',t:.5},{d:'-',t:.5}] },
+  { name:'Island strum', desc:'Calypso/uke staple. Down, ghost, down-up, up-down-up.',
+    steps:[{d:'D',t:.5},{d:'-',t:.5},{d:'D',t:.5},{d:'U',t:.5},{d:'U',t:.5},{d:'D',t:.5},{d:'U',t:.5},{d:'-',t:.5}] },
+];
+
+const ROADMAP = [
+  { stage:1, badge:'Weeks 1–4', title:'Build calluses, learn the geography',
+    body:'Press strings until your fingertips ache, then press them again tomorrow. Name the open strings out loud. Find the same note in two places.' },
+  { stage:1, badge:'Weeks 4–8', title:'Master the open chords',
+    body:'Em, Am, C, G, D — clean enough that every string rings. No buzzes. No muted neighbors. Sit up straight.' },
+  { stage:2, badge:'Weeks 8–12', title:'Lock in strumming patterns',
+    body:'Keep the strumming hand moving even on ghost beats. The wrist is a metronome that occasionally touches the strings.' },
+  { stage:2, badge:'Months 3–6', title:'Play actual songs',
+    body:'Three chords, one strum, one song. Then four chords. Sing badly while you play — it forces you to keep time.' },
+  { stage:3, badge:'Months 6–12', title:'Barre chords + CAGED',
+    body:'Move the open shapes up the neck. Suddenly every chord lives in five places, not one.' },
+  { stage:3, badge:'Year 2+', title:'Fingerpicking & playing by ear',
+    body:'Travis picking, alternating bass, then start figuring out songs without tabs. Your ear becomes the teacher.' },
+];
+
+/* ============================================================
+   AUDIO
+   ============================================================ */
+let audio;
+function ac(){
+  if(!audio) audio = new (window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended') audio.resume();
+  return audio;
+}
+function pluck(freq, when=0, dur=1.6, gain=0.18){
+  const a = ac();
+  const t0 = a.currentTime + when;
+  const saw = a.createOscillator(); saw.type='sawtooth'; saw.frequency.value=freq;
+  const tri = a.createOscillator(); tri.type='triangle'; tri.frequency.value=freq;
+  const mix = a.createGain(); mix.gain.value=gain;
+  const lp = a.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=1;
+  lp.frequency.setValueAtTime(Math.min(6500, freq*9), t0);
+  lp.frequency.exponentialRampToValueAtTime(Math.max(180, freq*1.1), t0+dur);
+  const env = a.createGain();
+  env.gain.setValueAtTime(0.0001, t0);
+  env.gain.exponentialRampToValueAtTime(1, t0+0.005);
+  env.gain.exponentialRampToValueAtTime(0.001, t0+dur);
+  saw.connect(mix); tri.connect(mix); mix.connect(lp); lp.connect(env); env.connect(a.destination);
+  saw.start(t0); tri.start(t0);
+  saw.stop(t0+dur+0.1); tri.stop(t0+dur+0.1);
+}
+function strum(midis, dir='D', when=0, perString=0.018, dur=1.5){
+  const order = dir==='U' ? midis.slice() : midis.slice().reverse();
+  order.forEach((m,i)=>{ if (m!=null) pluck(noteFreq(m), when + i*perString, dur, 0.14); });
+}
+function click(when=0, accent=false){
+  const a = ac(); const t0 = a.currentTime+when;
+  const o = a.createOscillator(); o.type='square'; o.frequency.value=accent?1400:900;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(accent?0.16:0.08, t0+0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+0.06);
+  o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0+0.08);
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  inst:'guitar',
+  activeChord:null,
+  pattern:{ idx:null, bpm:90, chord:'G', timer:null, step:0 },
+  trainer:{ a:'G', b:'C', bpm:60, timer:null, beat:0, bar:0 },
+  prog:   { timer:null, idx:null },
+  strumAlong:{ timer:null },
+  barre:  { fret:1, shape:'E' },
+};
+const stoppers = []; // collected per-render so we can halt timers on rebuild
+
+/* ============================================================
+   DOM helpers
+   ============================================================ */
+const el = (tag, attrs={}, ...children) => {
+  const n = document.createElement(tag);
+  for (const k in attrs){
+    if (k==='class') n.className = attrs[k];
+    else if (k.startsWith('on') && typeof attrs[k]==='function') n.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k]!=null) n.setAttribute(k, attrs[k]);
+  }
+  for (const c of children){
+    if (c==null||c===false) continue;
+    n.appendChild(typeof c==='string' || typeof c==='number' ? document.createTextNode(String(c)) : c);
+  }
+  return n;
+};
+const svgEl = (tag, attrs={}, ...children) => {
+  const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs){
+    if (k.startsWith('on') && typeof attrs[k]==='function') n.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k]!=null) n.setAttribute(k, attrs[k]);
+  }
+  for (const c of children){
+    if (c==null) continue;
+    n.appendChild(typeof c==='string' ? document.createTextNode(c) : c);
+  }
+  return n;
+};
+const inst = () => INSTRUMENTS[state.inst];
+
+// chord -> midi notes in DISPLAY order (high->low)
+function chordMidis(I, chord){
+  return chord.frets.slice().reverse().map((f,i)=>{
+    if (f<0) return null;
+    const lowIdx = I.stringMidi.length-1-i;
+    return I.stringMidi[lowIdx] + f;
+  });
+}
+
+/* ============================================================
+   BIG FRETBOARD
+   ============================================================ */
+function buildFretboard(){
+  const I = inst();
+  const FRETS = 5;
+  const W = 720, padL = 70, padR = 20, padT = 24, padB = 26;
+  const sc = I.stringMidi.length;
+  const rowH = 30;
+  const H = padT + padB + (sc-1)*rowH;
+  const fretW = (W - padL - padR) / FRETS;
+
+  const svg = svgEl('svg',{class:'fretboard', viewBox:`0 0 ${W} ${H}`});
+  // nut
+  svg.appendChild(svgEl('rect',{x:padL-4,y:padT-10,width:6,height:H-padT-padB+20,fill:'#f0e6c8',stroke:'#3a2818'}));
+  // frets
+  for (let f=1; f<=FRETS; f++){
+    svg.appendChild(svgEl('line',{x1:padL+f*fretW,y1:padT-6,x2:padL+f*fretW,y2:H-padB+6,stroke:'#d8c08a','stroke-width':3}));
+    if (f===3 || f===5){
+      svg.appendChild(svgEl('circle',{cx:padL+(f-.5)*fretW, cy:H/2, r:7, fill:'#3d2817', opacity:.45}));
+    }
+  }
+
+  const activeChord = state.activeChord ? I.chords.find(c=>c.name===state.activeChord) : null;
+
+  for (let i=0; i<sc; i++){
+    const y = padT + i*rowH;
+    const lowIdx = sc-1-i;
+    const openMidi = I.stringMidi[lowIdx];
+    const thickness = 1 + i*0.4;
+    svg.appendChild(svgEl('line',{x1:padL,y1:y,x2:W-padR,y2:y,stroke:'#e8d8a8','stroke-width':thickness,opacity:0.85}));
+
+    // open-string label button
+    const labelG = svgEl('g',{style:'cursor:pointer',
+      onclick:()=>{ pluck(noteFreq(openMidi)); flashNow(I.stringNames[lowIdx]+' (open) — '+noteName(openMidi)); }});
+    labelG.appendChild(svgEl('rect',{x:padL-58,y:y-13,width:48,height:26,rx:6,fill:'#241811',stroke:'#d4a04a','stroke-width':1.5}));
+    labelG.appendChild(svgEl('text',{x:padL-34,y:y+5,'text-anchor':'middle',fill:'#f4e8d0','font-family':'serif','font-size':14,'font-weight':600}, I.stringNames[lowIdx]));
+    svg.appendChild(labelG);
+
+    // active-chord open/mute marker
+    if (activeChord){
+      const f = activeChord.frets[lowIdx];
+      if (f===0){
+        svg.appendChild(svgEl('circle',{cx:padL-12,cy:y,r:7,fill:'none',stroke:'#f4e8d0','stroke-width':2}));
+      } else if (f<0){
+        svg.appendChild(svgEl('text',{x:padL-12,y:y+5,'text-anchor':'middle',fill:'#b85c3a','font-family':'serif','font-size':18,'font-weight':600},'✕'));
+      }
+    }
+
+    // fret positions
+    for (let f=1; f<=FRETS; f++){
+      const cx = padL + (f-0.5)*fretW;
+      const midi = openMidi + f;
+      const isActive = activeChord && activeChord.frets[lowIdx]===f;
+      const g = svgEl('g',{style:'cursor:pointer',
+        onclick:()=>{ pluck(noteFreq(midi));
+          flashNow(noteName(midi)+' — '+I.stringNames[lowIdx]+' string, fret '+f); }});
+      g.appendChild(svgEl('circle',{cx,cy:y,r:14,fill:'transparent'}));
+      g.appendChild(svgEl('circle',{cx,cy:y,
+        r:isActive?11:5,
+        fill:isActive?'#d4a04a':'#2c1d12',
+        stroke:isActive?'#f4e8d0':'#3d2817',
+        'stroke-width':isActive?2:1,
+        opacity:isActive?1:0.55}));
+      if (isActive){
+        const finger = activeChord.fingers[lowIdx];
+        if (finger>0){
+          g.appendChild(svgEl('text',{x:cx,y:y+4,'text-anchor':'middle',fill:'#2a1a07','font-family':'serif','font-size':12,'font-weight':700}, String(finger)));
+        }
+      }
+      svg.appendChild(g);
+    }
+  }
+  // fret numbers
+  for (let f=1; f<=FRETS; f++){
+    svg.appendChild(svgEl('text',{x:padL+(f-.5)*fretW,y:H-6,'text-anchor':'middle',fill:'#f3e4c4','font-size':11,'font-family':'serif',opacity:.6}, String(f)));
+  }
+  return svg;
+}
+function refreshFretboard(){
+  const host = document.getElementById('fretboardHost');
+  if (!host) return;
+  host.replaceChildren(buildFretboard());
+}
+function flashNow(text){
+  const n = document.getElementById('nowPlaying');
+  if (!n) return;
+  n.textContent = text;
+  clearTimeout(flashNow._t);
+  flashNow._t = setTimeout(()=>{ if (n.textContent===text) n.textContent=''; }, 1600);
+}
+
+/* ============================================================
+   SMALL CHORD DIAGRAM (used in cards + explainer)
+   For barre shapes, we pass an explicit startFret so the diagram
+   shows a fret-number indicator beside the top fret.
+   ============================================================ */
+function chordDiagram(chord, opts={}){
+  const I = opts.inst || inst();
+  const sc = I.stringMidi.length;
+  const FRETS = opts.frets || 4;
+  const startFret = opts.startFret || 0;  // 0 = nut visible
+  const w = opts.w || 110, h = opts.h || 130;
+  const padL = 18, padR = 14, padT = 24, padB = 14;
+  const colW = (w - padL - padR) / (sc-1);
+  const rowH = (h - padT - padB) / FRETS;
+  const svg = svgEl('svg',{width:w,height:h,viewBox:`0 0 ${w} ${h}`});
+
+  // nut or fret-number indicator
+  if (startFret===0){
+    svg.appendChild(svgEl('rect',{x:padL-2,y:padT-3,width:w-padL-padR+4,height:5,fill:'#f0e6c8'}));
+  } else {
+    svg.appendChild(svgEl('text',{x:padL-6,y:padT+rowH/2+4,'text-anchor':'end',fill:'#d4a04a','font-size':11,'font-family':'serif'}, startFret+'fr'));
+  }
+
+  for (let f=1; f<=FRETS; f++){
+    svg.appendChild(svgEl('line',{x1:padL,y1:padT+f*rowH,x2:w-padR,y2:padT+f*rowH,stroke:'#7a6a52','stroke-width':1}));
+  }
+  for (let s=0; s<sc; s++){
+    svg.appendChild(svgEl('line',{x1:padL+s*colW,y1:padT,x2:padL+s*colW,y2:padT+FRETS*rowH,stroke:'#cbb896','stroke-width':1}));
+  }
+
+  // Barre indicator: if startFret>0 we are showing a movable shape and the
+  // first row should be drawn as a barre across all non-muted strings.
+  if (startFret>0){
+    const minPlayed = Math.min(...chord.frets.filter(f=>f>=0));
+    if (minPlayed===0){
+      const firstS = chord.frets.findIndex(f=>f===0);
+      const lastS = chord.frets.length-1 - chord.frets.slice().reverse().findIndex(f=>f===0);
+      const y = padT + 0.5*rowH;
+      svg.appendChild(svgEl('rect',{
+        x:padL+firstS*colW-9, y:y-9, width:(lastS-firstS)*colW+18, height:18,
+        rx:9, fill:'#d4a04a', opacity:0.9,
+      }));
+    }
+  }
+
+  for (let s=0; s<sc; s++){
+    const f = chord.frets[s];
+    const finger = chord.fingers[s];
+    const x = padL + s*colW;
+    if (f<0){
+      svg.appendChild(svgEl('text',{x,y:padT-7,'text-anchor':'middle',fill:'#b85c3a','font-size':14,'font-weight':600},'✕'));
+    } else if (f===0){
+      if (startFret>0){
+        // open in barre shape means barred at startFret; dot was drawn above
+      } else {
+        svg.appendChild(svgEl('circle',{cx:x,cy:padT-9,r:5,fill:'none',stroke:'#f4e8d0','stroke-width':1.5}));
+      }
+    } else {
+      const cy = padT + (f-0.5)*rowH;
+      svg.appendChild(svgEl('circle',{cx:x,cy,r:8,fill:'#d4a04a',stroke:'#2a1a07','stroke-width':1}));
+      if (finger>0){
+        svg.appendChild(svgEl('text',{x,y:cy+4,'text-anchor':'middle',fill:'#2a1a07','font-size':11,'font-weight':700,'font-family':'serif'}, String(finger)));
+      }
+    }
+  }
+  return svg;
+}
+
+/* ============================================================
+   STOP-EVERYTHING (called when switching instruments)
+   ============================================================ */
+function stopAll(){
+  if (state.pattern.timer){ clearInterval(state.pattern.timer); state.pattern.timer=null; }
+  if (state.trainer.timer){ clearInterval(state.trainer.timer); state.trainer.timer=null; }
+  if (state.prog.timer){    clearInterval(state.prog.timer);    state.prog.timer=null; }
+  if (state.strumAlong.timer){ clearInterval(state.strumAlong.timer); state.strumAlong.timer=null; }
+  state.pattern.idx = null; state.prog.idx = null;
+  state.trainer.beat = 0; state.trainer.bar = 0;
+  while (stoppers.length){ const fn = stoppers.pop(); try { fn(); } catch(e){} }
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+function sectionStickyFretboard(){
+  const I = inst();
+  const wrap = el('div',{class:'sticky-board'});
+  const scroll = el('div',{class:'board-scroll'});
+  const card = el('div',{class:'fretboard-card'});
+  card.appendChild(el('div',{class:'fretboard-label'},
+    el('span',{}, I.name+' fretboard · '+I.stringNames.slice().reverse().join('  ')+' (high→low)'),
+    el('span',{class:'now',id:'nowPlaying'},'')
+  ));
+  const host = el('div',{id:'fretboardHost'});
+  host.appendChild(buildFretboard());
+  card.appendChild(host);
+  scroll.appendChild(card);
+  wrap.appendChild(scroll);
+  return wrap;
+}
+
+function sectionIntro(){
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'01.'), 'The fretboard, made clickable'));
+  sec.appendChild(el('p',{class:'lede'},
+    'Tap any open-string label or any fret position above to hear the note. ' +
+    'The board scrolls horizontally on small screens. When you click a chord further down, its shape will light up here.'));
+  return sec;
+}
+
+function sectionHowToRead(){
+  const I = inst();
+  const sample = I.chords[0];
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'02.'), 'How to read a chord diagram'));
+  sec.appendChild(el('p',{class:'lede'},
+    'A chord diagram is a tiny map of the fretboard, rotated so the strings run vertically. ' +
+    'The thick line on top is the nut. Symbols above each string tell your right hand what to do; ' +
+    'numbered dots tell your left hand where to press.'));
+  const panel = el('div',{class:'panel'});
+  const grid = el('div',{class:'explain-grid'});
+  const legend = el('div',{class:'legend'});
+  const oKey = el('div',{class:'key open'},'○');
+  const xKey = el('div',{class:'key mute'},'✕');
+  legend.appendChild(oKey); legend.appendChild(el('div',{},'Open string — let it ring without pressing.'));
+  legend.appendChild(xKey); legend.appendChild(el('div',{},'Muted — don\'t play this string. Skip it or rest a finger across it.'));
+  ['1','2','3','4'].forEach((n,i)=>{
+    legend.appendChild(el('div',{class:'key'}, n));
+    legend.appendChild(el('div',{}, ['Index finger.','Middle finger.','Ring finger.','Pinky.'][i]));
+  });
+  grid.appendChild(legend);
+  const ex = el('div',{style:'text-align:center'});
+  ex.appendChild(chordDiagram(sample,{w:140,h:170}));
+  ex.appendChild(el('div',{class:'hint',style:'margin-top:6px'},'Example: '+sample.name));
+  grid.appendChild(ex);
+  panel.appendChild(grid);
+  sec.appendChild(panel);
+  return sec;
+}
+
+function sectionChords(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'03.'), 'First chords'));
+  sec.appendChild(el('p',{class:'lede'},
+    'Sorted easiest first. Click any card to hear it strummed and watch the shape light up on the fretboard above. ' +
+    'Amber names are major chords; sage are minor. Dots in the corner hint at difficulty.'));
+  const grid = el('div',{class:'chord-grid'});
+  I.chords.slice().sort((a,b)=>a.d-b.d).forEach(ch=>{
+    const card = el('div',{class:'chord-card '+ch.q,
+      onclick:()=>{
+        state.activeChord = ch.name;
+        refreshFretboard();
+        strum(chordMidis(I,ch),'D');
+        grid.querySelectorAll('.chord-card').forEach(c=>c.classList.remove('active'));
+        card.classList.add('active');
+        flashNow(ch.name+' '+ch.q);
+      }});
+    card.appendChild(el('div',{class:'difficulty'}, '·'.repeat(ch.d)));
+    card.appendChild(el('div',{class:'name'}, ch.name));
+    card.appendChild(chordDiagram(ch));
+    card.appendChild(el('div',{class:'quality'}, ch.q));
+    grid.appendChild(card);
+  });
+  sec.appendChild(grid);
+  return sec;
+}
+
+function sectionPatterns(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'04.'), 'Strumming patterns'));
+  sec.appendChild(el('p',{class:'lede'},
+    'Pick a chord, hit Play, and let the arrows lead. Keep your hand moving on the dashes too — those are ghost strums.'));
+  const panel = el('div',{class:'panel'});
+  const head = el('div',{style:'display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px'});
+
+  if (!I.chords.find(c=>c.name===state.pattern.chord)) state.pattern.chord = I.chords[0].name;
+  const chordSel = el('select',{onchange:e=>state.pattern.chord=e.target.value});
+  I.chords.forEach(ch=>{
+    const o = el('option',{value:ch.name}, ch.name);
+    if (ch.name===state.pattern.chord) o.setAttribute('selected','');
+    chordSel.appendChild(o);
+  });
+  head.appendChild(el('label',{class:'field'},'Chord:',chordSel));
+
+  const bpmIn = el('input',{type:'range',min:60,max:140,value:state.pattern.bpm});
+  const bpmLbl = el('span',{class:'hint'}, state.pattern.bpm+' bpm');
+  bpmIn.oninput = e=>{
+    state.pattern.bpm = +e.target.value; bpmLbl.textContent = e.target.value+' bpm';
+    if (state.pattern.timer){
+      const idx = state.pattern.idx;
+      stopPattern();
+      const row = list.querySelectorAll('.pattern')[idx];
+      startPattern(idx, row);
+      refreshPatternBtns();
+    }
+  };
+  head.appendChild(el('label',{class:'field',style:'flex:1;min-width:240px'},'Tempo:',bpmIn,bpmLbl));
+  panel.appendChild(head);
+
+  const list = el('div',{class:'pattern-list'});
+  PATTERNS.forEach((p, idx)=>{
+    const row = el('div',{class:'pattern'});
+    row._idx = idx;
+    const arrows = el('div',{class:'arrows'});
+    p.steps.forEach(s=>{
+      arrows.appendChild(el('div',{class:'arrow '+(s.d==='-'?'miss':'')},
+        s.d==='D'?'↓':s.d==='U'?'↑':'·'));
+    });
+    const btn = el('button',{class:'play-btn'},'Play');
+    btn.onclick = ()=>{
+      if (state.pattern.timer && state.pattern.idx===idx){ stopPattern(); refreshPatternBtns(); return; }
+      stopPattern();
+      startPattern(idx, row);
+      refreshPatternBtns();
+    };
+    row._btn = btn;
+    row.appendChild(el('div',{class:'pattern-head'},
+      el('div',{}, el('div',{class:'pattern-name'},p.name), el('div',{class:'pattern-desc'},p.desc)),
+      btn
+    ));
+    row.appendChild(arrows);
+    list.appendChild(row);
+  });
+  panel.appendChild(list);
+  sec.appendChild(panel);
+
+  function refreshPatternBtns(){
+    list.querySelectorAll('.pattern').forEach(r=>{
+      const on = state.pattern.timer && state.pattern.idx===r._idx;
+      r._btn.textContent = on?'Stop':'Play';
+      r._btn.classList.toggle('stop', !!on);
+    });
+  }
+  stoppers.push(()=>{ stopPattern(); });
+  return sec;
+}
+function stopPattern(){
+  if (state.pattern.timer){ clearInterval(state.pattern.timer); state.pattern.timer=null; }
+  document.querySelectorAll('.pattern .arrow').forEach(a=>a.classList.remove('on'));
+}
+function startPattern(idx, row){
+  const I = inst();
+  const p = PATTERNS[idx];
+  state.pattern.idx = idx;
+  const beatMs = 60000/state.pattern.bpm;
+  const tickMs = beatMs * 0.5;
+  let i = 0;
+  const arrows = row.querySelectorAll('.arrow');
+  const fire = ()=>{
+    arrows.forEach(a=>a.classList.remove('on'));
+    const step = p.steps[i % p.steps.length];
+    if (step.d!=='-'){
+      const ch = I.chords.find(c=>c.name===state.pattern.chord) || I.chords[0];
+      strum(chordMidis(I,ch), step.d, 0, 0.012, 0.9);
+    }
+    arrows[i % p.steps.length].classList.add('on');
+    i++;
+  };
+  fire();
+  state.pattern.timer = setInterval(fire, tickMs);
+}
+
+function sectionProgressions(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'05.'), 'Beginner progressions'));
+  sec.appendChild(el('p',{class:'lede'},
+    'Four chords, in four orders, account for an enormous chunk of popular music. Tap one to hear it strummed.'));
+  const grid = el('div',{class:'prog-grid'});
+  I.progressions.forEach((p,idx)=>{
+    const card = el('div',{class:'prog'});
+    card._idx = idx;
+    card.appendChild(el('div',{class:'roman'}, p.roman));
+    const chordsDiv = el('div',{class:'chords'});
+    p.chords.forEach((c,i)=>{
+      if (i>0) chordsDiv.appendChild(el('span',{class:'sep'},'·'));
+      const span = el('span',{}, c);
+      span.dataset.i = i;
+      chordsDiv.appendChild(span);
+    });
+    card.appendChild(chordsDiv);
+    card.onclick = ()=>{
+      if (state.prog.idx===idx){ stopProg(); refreshProgs(); return; }
+      stopProg();
+      state.prog.idx = idx;
+      playProg(idx, chordsDiv);
+      refreshProgs();
+    };
+    grid.appendChild(card);
+  });
+  sec.appendChild(grid);
+  function refreshProgs(){
+    grid.querySelectorAll('.prog').forEach(c=>c.classList.toggle('playing', state.prog.idx===c._idx));
+  }
+  stoppers.push(()=>stopProg());
+  return sec;
+}
+function stopProg(){
+  if (state.prog.timer){ clearInterval(state.prog.timer); state.prog.timer=null; }
+  state.prog.idx = null;
+  document.querySelectorAll('.prog .chords span').forEach(s=>s.classList.remove('now'));
+  document.querySelectorAll('.prog').forEach(p=>p.classList.remove('playing'));
+}
+function playProg(idx, chordsDiv){
+  const I = inst();
+  const p = I.progressions[idx];
+  let step = 0;
+  const bpm = 90;
+  const barMs = (60000/bpm)*4;
+  const fire = ()=>{
+    chordsDiv.querySelectorAll('span').forEach(s=>s.classList.remove('now'));
+    const i = step % p.chords.length;
+    const name = p.chords[i];
+    const span = chordsDiv.querySelector('span[data-i="'+i+'"]');
+    if (span) span.classList.add('now');
+    const ch = I.chords.find(c=>c.name===name);
+    if (ch){
+      for (let b=0; b<4; b++){
+        strum(chordMidis(I,ch),'D', b*(60/bpm), 0.012, 0.9);
+      }
+    }
+    state.activeChord = name; refreshFretboard();
+    step++;
+  };
+  fire();
+  state.prog.timer = setInterval(fire, barMs);
+}
+
+function sectionTrainer(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'06.'), 'Chord-change trainer'));
+  sec.appendChild(el('p',{class:'lede'},
+    'The single most important beginner drill. Pick two chords and switch on every downbeat. Start slow. Speed kills cleanliness.'));
+  const panel = el('div',{class:'panel'});
+  const grid = el('div',{class:'trainer'});
+
+  if (!I.chords.find(c=>c.name===state.trainer.a)) state.trainer.a = I.chords[0].name;
+  if (!I.chords.find(c=>c.name===state.trainer.b)) state.trainer.b = I.chords[1].name;
+
+  const display = el('div',{class:'trainer-display'});
+  const current = el('div',{class:'trainer-current'}, state.trainer.a);
+  const next    = el('div',{class:'trainer-next'}, 'next: ', el('b',{}, state.trainer.b));
+  const beats   = el('div',{class:'beats'});
+  for (let i=0; i<4; i++) beats.appendChild(el('div',{class:'beat'+(i===0?' downbeat':'')}));
+  display.appendChild(current); display.appendChild(next); display.appendChild(beats);
+  grid.appendChild(display);
+
+  const controls = el('div',{class:'trainer-controls'});
+  const pair = el('div',{class:'selector-pair'});
+  const aDiv = el('div'); aDiv.appendChild(el('label',{},'Chord A'));
+  const bDiv = el('div'); bDiv.appendChild(el('label',{},'Chord B'));
+  const aSel = el('select',{onchange:e=>{ state.trainer.a=e.target.value; current.textContent=e.target.value; }});
+  const bSel = el('select',{onchange:e=>{ state.trainer.b=e.target.value; next.replaceChildren('next: ', el('b',{},e.target.value)); }});
+  I.chords.forEach(ch=>{
+    const oa = el('option',{value:ch.name}, ch.name); if (ch.name===state.trainer.a) oa.setAttribute('selected','');
+    const ob = el('option',{value:ch.name}, ch.name); if (ch.name===state.trainer.b) ob.setAttribute('selected','');
+    aSel.appendChild(oa); bSel.appendChild(ob);
+  });
+  aDiv.appendChild(aSel); bDiv.appendChild(bSel);
+  pair.appendChild(aDiv); pair.appendChild(bDiv);
+  controls.appendChild(pair);
+
+  const bpmRow = el('div',{class:'bpm-row'});
+  const bpmIn = el('input',{type:'range',min:40,max:120,value:state.trainer.bpm});
+  const bpmVal = el('span',{class:'bpm-val'}, state.trainer.bpm+' bpm');
+  bpmIn.oninput = e=>{
+    state.trainer.bpm = +e.target.value; bpmVal.textContent = e.target.value+' bpm';
+    if (state.trainer.timer){ stopTrainer(); startTrainer(); }
+  };
+  bpmRow.appendChild(el('label',{class:'field'},'Tempo:')); bpmRow.appendChild(bpmIn); bpmRow.appendChild(bpmVal);
+  controls.appendChild(bpmRow);
+
+  const btn = el('button',{class:'play-btn'},'Start');
+  btn.onclick = ()=>{
+    if (state.trainer.timer){ stopTrainer(); btn.textContent='Start'; btn.classList.remove('stop'); }
+    else { startTrainer(); btn.textContent='Stop'; btn.classList.add('stop'); }
+  };
+  controls.appendChild(btn);
+  grid.appendChild(controls);
+  panel.appendChild(grid);
+  sec.appendChild(panel);
+
+  function stopTrainer(){
+    if (state.trainer.timer){ clearInterval(state.trainer.timer); state.trainer.timer=null; }
+    beats.querySelectorAll('.beat').forEach(b=>b.classList.remove('on'));
+    state.trainer.beat=0; state.trainer.bar=0;
+  }
+  function startTrainer(){
+    stopTrainer();
+    state.trainer.beat=0; state.trainer.bar=0;
+    setActive(state.trainer.a);
+    current.textContent = state.trainer.a;
+    next.replaceChildren('next: ', el('b',{}, state.trainer.b));
+    const tick = ()=>{
+      const I2 = inst();
+      const b = state.trainer.beat;
+      beats.querySelectorAll('.beat').forEach((node,i)=>node.classList.toggle('on', i===b));
+      click(0, b===0);
+      const which = state.trainer.bar % 2===0 ? state.trainer.a : state.trainer.b;
+      const ch = I2.chords.find(c=>c.name===which);
+      if (ch) strum(chordMidis(I2,ch),'D',0,0.012,0.8);
+      state.trainer.beat++;
+      if (state.trainer.beat>=4){
+        state.trainer.beat=0; state.trainer.bar++;
+        const cur  = state.trainer.bar % 2===0 ? state.trainer.a : state.trainer.b;
+        const nxt  = state.trainer.bar % 2===0 ? state.trainer.b : state.trainer.a;
+        setActive(cur);
+        current.textContent = cur;
+        next.replaceChildren('next: ', el('b',{}, nxt));
+      }
+    };
+    tick();
+    state.trainer.timer = setInterval(tick, 60000/state.trainer.bpm);
+  }
+  function setActive(name){ state.activeChord=name; refreshFretboard(); }
+  stoppers.push(stopTrainer);
+  return sec;
+}
+
+function sectionRoadmap(){
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'07.'), 'Beginner → advanced roadmap'));
+  sec.appendChild(el('p',{class:'lede'},
+    'You\'re three months in. This is what the next three years actually look like.'));
+  const panel = el('div',{class:'panel'});
+  const rm = el('div',{class:'roadmap'});
+  ROADMAP.forEach(s=>{
+    const stage = el('div',{class:'stage s'+s.stage});
+    stage.appendChild(el('h4',{}, s.title, el('span',{class:'badge'}, s.badge)));
+    stage.appendChild(el('p',{}, s.body));
+    rm.appendChild(stage);
+  });
+  panel.appendChild(rm);
+  sec.appendChild(panel);
+  return sec;
+}
+
+function sectionTuner(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'08.'), 'Tuner reference'));
+  sec.appendChild(el('p',{class:'lede'},
+    'Play each open-string note here, then turn your tuning peg until your string matches. From highest pitched string to lowest.'));
+  const panel = el('div',{class:'panel'});
+  const row = el('div',{class:'tuner-row'});
+  for (let i=I.stringMidi.length-1; i>=0; i--){
+    const m = I.stringMidi[i];
+    const f = noteFreq(m);
+    const btn = el('button',{class:'tuner-btn', onclick:()=>{ pluck(f,0,2.6,0.22); flashNow(I.stringNames[i]+' — '+f.toFixed(1)+' Hz'); }},
+      el('span',{class:'note'}, I.stringNames[i]),
+      el('span',{class:'hz'}, f.toFixed(1)+' Hz')
+    );
+    row.appendChild(btn);
+  }
+  panel.appendChild(row);
+  sec.appendChild(panel);
+  return sec;
+}
+
+function sectionStrumAlong(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'09.'), 'Strum-along mode'));
+  sec.appendChild(el('p',{class:'lede'},
+    'Pick a progression and a strum. We\'ll cycle it forever — your job is to play along on a real instrument.'));
+  const panel = el('div',{class:'panel'});
+  const row = el('div',{style:'display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end'});
+
+  const progSel = el('select');
+  I.progressions.forEach((p,i)=>progSel.appendChild(el('option',{value:i}, p.roman+'  ('+p.chords.join(' · ')+')')));
+  const patSel = el('select');
+  PATTERNS.forEach((p,i)=>patSel.appendChild(el('option',{value:i}, p.name)));
+  const bpmIn = el('input',{type:'range',min:60,max:140,value:90});
+  const bpmLbl = el('span',{class:'hint'},'90 bpm');
+  bpmIn.oninput = e=>bpmLbl.textContent = e.target.value+' bpm';
+  const btn = el('button',{class:'play-btn'},'Start');
+
+  row.appendChild(el('label',{class:'field',style:'flex:2;min-width:260px'},'Progression:',progSel));
+  row.appendChild(el('label',{class:'field'},'Pattern:',patSel));
+  row.appendChild(el('label',{class:'field',style:'min-width:220px;flex:1'},'Tempo:',bpmIn,bpmLbl));
+  row.appendChild(btn);
+  panel.appendChild(row);
+
+  const display = el('div',{style:'margin-top:18px;text-align:center'});
+  const big = el('div',{style:'font-size:3.2rem;color:var(--amber);font-style:italic;letter-spacing:1px'}, '—');
+  const nxt = el('div',{class:'hint'}, '');
+  display.appendChild(big); display.appendChild(nxt);
+  panel.appendChild(display);
+
+  function stop(){
+    if (state.strumAlong.timer){ clearInterval(state.strumAlong.timer); state.strumAlong.timer=null; }
+    big.textContent='—'; nxt.textContent='';
+    btn.textContent='Start'; btn.classList.remove('stop');
+  }
+  function start(){
+    stop();
+    const p = I.progressions[+progSel.value];
+    const pat = PATTERNS[+patSel.value];
+    const bpm = +bpmIn.value;
+    const barMs = (60000/bpm)*4;
+    let bar = 0;
+    const fire = ()=>{
+      const name = p.chords[bar % p.chords.length];
+      const ch = I.chords.find(c=>c.name===name);
+      big.textContent = name;
+      nxt.textContent = 'next: ' + p.chords[(bar+1)%p.chords.length];
+      state.activeChord = name; refreshFretboard();
+      let t = 0;
+      pat.steps.forEach(s=>{
+        if (s.d!=='-' && ch) strum(chordMidis(I,ch), s.d, t, 0.012, 1.0);
+        t += s.t * (60/bpm);
+      });
+      bar++;
+    };
+    fire();
+    state.strumAlong.timer = setInterval(fire, barMs);
+    btn.textContent='Stop'; btn.classList.add('stop');
+  }
+  btn.onclick = ()=>{ if (state.strumAlong.timer) stop(); else start(); };
+  stoppers.push(stop);
+
+  sec.appendChild(panel);
+  return sec;
+}
+
+function sectionBarre(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'10.'), 'Barre chord lab'));
+  sec.appendChild(el('p',{class:'lede'},
+    'When you can move an open shape up the neck, every fret unlocks a new chord. Slide the position to see the same shape become different chords.'));
+
+  const panel = el('div',{class:'panel'});
+  if (!I.barreShapes || I.barreShapes.length===0){
+    panel.appendChild(el('p',{class:'hint'},'(no barre shapes defined for this instrument)'));
+    sec.appendChild(panel); return sec;
+  }
+  if (!I.barreShapes.find(s=>s.id===state.barre.shape)) state.barre.shape = I.barreShapes[0].id;
+
+  const row = el('div',{class:'barre-row'});
+  const shapeSel = el('select');
+  I.barreShapes.forEach(s=>{
+    const o = el('option',{value:s.id}, s.label);
+    if (s.id===state.barre.shape) o.setAttribute('selected','');
+    shapeSel.appendChild(o);
+  });
+  shapeSel.onchange = e=>{ state.barre.shape=e.target.value; render(); };
+
+  const fretIn = el('input',{type:'range',min:1,max:9,value:state.barre.fret});
+  const fretLbl = el('span',{class:'bpm-val'}, 'fret '+state.barre.fret);
+  fretIn.oninput = e=>{ state.barre.fret=+e.target.value; fretLbl.textContent='fret '+e.target.value; render(); };
+
+  row.appendChild(el('div',{},
+    el('label',{},'Shape'), shapeSel));
+  row.appendChild(el('div',{style:'flex:1;min-width:240px'},
+    el('label',{},'Position'),
+    el('div',{style:'display:flex;align-items:center;gap:12px'}, fretIn, fretLbl)
+  ));
+  const playBtn = el('button',{class:'play-btn',
+    onclick:()=>{
+      const shp = I.barreShapes.find(s=>s.id===state.barre.shape);
+      const moved = movedShape(shp, state.barre.fret);
+      strum(chordMidis(I, moved),'D');
+    }},'Strum');
+  row.appendChild(playBtn);
+  panel.appendChild(row);
+
+  const disp = el('div',{class:'barre-display'});
+  panel.appendChild(disp);
+
+  function movedShape(shape, atFret){
+    return {
+      frets:  shape.frets.map(f => f<0 ? -1 : f + atFret - 1 + (f>0 ? 0 : 0)),
+      // For open-shape barring, an open string becomes the barre fret, not above it.
+      // Re-do correctly:
+    };
+  }
+  // re-define correctly outside
+  function movedShape2(shape, atFret){
+    // every fretted position shifts by (atFret-1); open strings become barred at atFret.
+    return {
+      frets: shape.frets.map(f => f<0 ? -1 : f===0 ? atFret : (f + atFret - 1)),
+      fingers: shape.fingers.slice(),
+    };
+  }
+  function rootMidiOf(shape, atFret){
+    // E-shape: root on string 6 (low E) at atFret. A-shape: root on string 5 (A) at atFret.
+    const isE = shape.id==='E'||shape.id==='Em';
+    const stringLowIdx = isE ? 0 : 1;
+    if (stringLowIdx>=I.stringMidi.length) return null;
+    return I.stringMidi[stringLowIdx] + atFret;
+  }
+  function chordLabel(shape, atFret){
+    const m = rootMidiOf(shape, atFret);
+    if (m==null) return '?';
+    const root = noteName(m);
+    const suffix = shape.id.endsWith('m') ? 'm' : '';
+    return root + suffix;
+  }
+
+  function render(){
+    disp.replaceChildren();
+    const shp = I.barreShapes.find(s=>s.id===state.barre.shape);
+    const moved = movedShape2(shp, state.barre.fret);
+    // Visual diagram showing the shape with startFret indicator
+    const visual = { frets: shp.frets.slice(), fingers: shp.fingers.slice() };
+    disp.appendChild(chordDiagram(visual, {w:160, h:180, startFret: state.barre.fret}));
+    const meta = el('div',{},
+      el('div',{class:'barre-name'}, chordLabel(shp, state.barre.fret)),
+      el('div',{class:'hint',style:'margin-top:6px'}, shp.label),
+      el('div',{class:'hint',style:'margin-top:4px'}, 'barre across fret '+state.barre.fret)
+    );
+    disp.appendChild(meta);
+  }
+  render();
+  sec.appendChild(panel);
+  return sec;
+}
+
+function sectionSongs(){
+  const I = inst();
+  const sec = el('section');
+  sec.appendChild(el('h2',{}, el('span',{class:'num'},'11.'), 'Song library'));
+  sec.appendChild(el('p',{class:'lede'},
+    'Famous beginner songs and the chords they live on. Tap to hear the progression strummed.'));
+  const grid = el('div',{class:'song-grid'});
+  I.songs.forEach((song,idx)=>{
+    const card = el('div',{class:'song',
+      onclick:()=>{
+        stopProg();
+        // play once through
+        const chordsAvail = song.chords.every(n => I.chords.find(c=>c.name===n));
+        if (!chordsAvail){ flashNow('Some chords aren\'t in the lab yet — try the progression above.'); return; }
+        let i = 0;
+        const bpm = 84;
+        const barMs = (60000/bpm)*4;
+        const fire = ()=>{
+          if (i >= song.chords.length){ clearInterval(state.prog.timer); state.prog.timer=null; return; }
+          const name = song.chords[i];
+          const ch = I.chords.find(c=>c.name===name);
+          if (ch){ for (let b=0; b<4; b++) strum(chordMidis(I,ch),'D', b*(60/bpm), 0.012, 0.9); }
+          state.activeChord = name; refreshFretboard();
+          flashNow(song.title+' — '+name);
+          i++;
+        };
+        fire();
+        state.prog.timer = setInterval(fire, barMs);
+      }});
+    card.appendChild(el('div',{class:'title'}, song.title));
+    card.appendChild(el('div',{class:'artist'}, song.artist));
+    card.appendChild(el('div',{class:'chords'}, song.chords.join(' · ')));
+    grid.appendChild(card);
+  });
+  sec.appendChild(grid);
+  return sec;
+}
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+function renderApp(){
+  stopAll();
+  const app = document.getElementById('app');
+  app.replaceChildren(
+    sectionStickyFretboard(),
+    sectionIntro(),
+    sectionHowToRead(),
+    sectionChords(),
+    sectionPatterns(),
+    sectionProgressions(),
+    sectionTrainer(),
+    sectionRoadmap(),
+    sectionTuner(),
+    sectionStrumAlong(),
+    sectionBarre(),
+    sectionSongs(),
+  );
+}
+
+/* ============================================================
+   TOGGLE WIRE-UP
+   ============================================================ */
+document.getElementById('instToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#instToggle button').forEach(b=>b.classList.toggle('on', b===btn));
+  state.inst = btn.dataset.inst;
+  state.activeChord = null;
+  state.pattern.chord = INSTRUMENTS[state.inst].chords[0].name;
+  state.trainer.a = INSTRUMENTS[state.inst].chords[0].name;
+  state.trainer.b = INSTRUMENTS[state.inst].chords[1].name;
+  state.barre.shape = INSTRUMENTS[state.inst].barreShapes[0]?.id || 'E';
+  renderApp();
+});
+
+renderApp();
+</script>
+</body>
+</html>
